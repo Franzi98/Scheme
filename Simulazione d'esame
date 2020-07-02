@@ -1,0 +1,187 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname |Simulazione d'esame|) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+;Completa la procedura  matchche, date due stringhe di lettere u e v, restituisce la stringa delle corrispondenze w cosìdefinita:
+;w ha la lunghezza della stringa più corta (fra u e v);
+;se in una certa posizione u e v contengono la stessa lettera,
+;allora anche  w  contiene quella lettera nella posizione corrispondente;
+;se invece  u  e  v  contengono lettere diverse,  wcontiene   il   simbolo   “asterisco”   nella   posizione   corrispondente.
+;Per   esempio,   il   valore   dell’espressione   Scheme(match"astrazione" "estremi")  è rappresentato dalla stringa delle corrispondenze "*str**i".
+
+(define match
+  (λ(u v)
+    (if (or (string=? u "") (string=? v ""))
+        ""
+        (let (( uh (string-ref u 0)) (vh (string-ref v 0)) (s( match (substring u 1) (substring v 1))))
+                                     (if (char=? uh vh)
+                                         (string-append (substring u 0 1 ) s)
+                                         (string-append s "*")
+                                         )
+                                     )
+          )
+        )
+    )
+;;;finito
+
+;Completa il programma   increment,  che calcola l’incremento di un numero naturale rappresentato come stringa dicifre
+;in una base compresa fra 2 e 10.
+;Gli argomenti sono num, la stringa numerica, e base, di tipo intero;
+;il valorerestituito è una stringa numerica.
+;Per esempio, il valore dell’espressione  (increment "1011" 2)  è  "1100"
+;dovele stringhe rappresentano rispettivamente 11 e 12 in base 2.
+
+
+;Date le stringhe u, v, la procedura  lcs  calcola una soluzione del problema della sottosequenza comune più lunga.
+;Ilrisultato è rappresentato da una lista di terne,
+;ciascuna delle quali contiene le posizioni in  u  e in  v  di un caratterecomune che fa parte della sottosequenza più lunga,
+;numerate a partire da 1, e la stringa costituita dal solo caratterecomune.
+;Esempi:(lcs "pino" "pino")→((1 1 "p") (2 2 "i") (3 3 "n") (4 4 "o"))(lcs "pelo" "peso")→((1 1 "p") (2 2 "e") (4 4 "o"))(lcs "ala" "palato")→((1 2 "a") (2 3 "l") (3 4 "a"))(lcs "arto" "atrio")→((1 1 "a") (3 2 "t") (4 5 "o"))In particolare, nell’ultimo esempio (3 2 "t") riporta le posizioni di 't' rispettivamente in "arto" e "atrio".Completa il programma riportato nel riquadro introducendo opportune espressioni negli appositi spazi.
+
+(define lcs ; val= stringhe
+  (λ(u v)
+    (cond ((or (string=? u "") (string=? v "")) "")
+          ((char=? (string-ref u 0) (string-ref v 0))
+           (string-append (substring u 0 1) (lcs (substring u 1) (substring v 1))))
+          (else
+           (better (lcs (substring u 1) v)
+                   (lcs u (substring v 1))
+                       )
+           ))))
+(define better
+  (λ( u v)
+    ( let (( m(string-length u)) (n (string-length v )))
+       (cond ((< m n) v)
+             ((> m n) u)
+             (else u)
+             ))))
+
+
+;Definisci una procedura cyclic-string in Scheme  che, dati come una stringa pattern e un numero naturale length
+; assuma come valore la stringa di lunghezza lenght risultante dalla ripetizione ciclica di pattern , eventualmente troncata a destra
+; Per esempio nel caso dell'espressione "abcd" n torni come risultato  per n= 0,1,2,3,4,5,11 ; "" "a" "ab" ""abc" "abcd" "abcda" abcdabcdabc"
+
+(define cyclic-string
+  (λ(string n)
+    (cond ((= (string-length string) n) string)
+          ((> (string-length string) n)
+           (substring string 0 n))
+          ((< (string-length string) n)
+           (string-append( substring string 0 (string-length string)) (cyclic-string string ( - n (string-length string)))))
+          )))
+;;;FINITO
+
+;Definisci una procedura   av   in Scheme che, data una lista non vuota   (x1  x2  ... xn)
+;i cui n elementi xi appartengonoall’insieme  {–1, 0, 1},
+;restituisca la lista    (y1  y2  ... yn–1)   di n–1 elementi dello stesso insieme
+;tale che   yi  = –1   sexi+xi+1 < 0,   yi = 0  se  xi + xi+1 = 0   e   yi = 1  se  xi + xi+1 > 0.
+;Per esempio:(av '(0 0 -1 -1 1 0 0 1 0))→(0 -1 -1 0 1 0 1 1)
+
+(define av
+  (lambda (x)
+    (cond
+      ((<= (length x) 1) null)
+      ((< (+ (first x) (second x)) 0) (cons -1 (av (cdr x))))
+      ((= (+ (first x) (second x)) 0) (cons 0 (av (cdr x))))
+      (else (cons 1 (av (cdr x))))
+      )))
+
+;Valori numerici nell’intervallo [0,1) possono essere rappresentati in forma binaria da una stringa di cifre "0" e "1"precedute dal carattere "." (punto),
+;dove i singoli bit sono pesati da potenze negative di due. Per esempio, le stringhe".1" e ".011" corrispondono ai numeri 0.5 e 0.375, rispettivamente, nella consueta notazione in base dieci.
+;Definisci una procedura   r-val   in Scheme per determinare il valore numerico di stringhe del tipo descritto sopra(punto seguito da una o più cifre binarie).
+
+(define bin
+  (lambda (str pos)
+    (cond
+      ((string=? str "") 0)
+      ((string=? (substring str 0 1) ".") (bin (substring str 1) (- pos 1)))
+      (else (+ (* (string->number (substring str 0 1)) (expt 2 pos)) (bin (substring str 1) (- pos 1))))
+      )))
+
+;;;FINITO
+
+;Definisci una procedura  shared  in Scheme che, date due liste  u,  v  (strettamente) ordinate di numeri interi positivi,
+;restituisca la lista ordinata degli elementi comuni a  u e  v.
+;Per esempio:(shared '(1 3 5 6 7 8 9 10) '(0 1 2 3 4 5 7 9))→(1 3 5 7 9)
+
+(define shared
+  (λ(u v)
+    (cond
+      ((or(null? u) (null? v)) null)
+       ((= (car u) (car v)) (cons (car u) (shared (cdr u) (cdr v))))
+       (else (better (shared u (cdr v)) (shared (cdr u) v)))
+       )))
+;;;FINITO
+
+;Una parola binaria, cioè una stringa composta esclusivamente dai simboli  0 e  1,
+;supera il  controllo di parità  se ilnumero di occorrenze di 1 è pari.
+;Data una lista di parole binarie, la procedura  parity-check-failures
+;restituiscela lista delle posizioni delle parole che non superano il controllo di parità.
+;Esempi:(parity-check-failures '("0111" "1001" "0000" "1010"))→'(0)
+;   (parity-check-failures '("0110" "1101" "0000" "1011"))→'(1 3)
+;   (parity-check-failures '("0111" "1011" "0100" "1110"))→'(0 1 2 3)
+;   (parity-check-failures '("0110" "1001" "0000" "1010"))→'()
+; Definisci un programma in Scheme che renda disponibile la procedura  parity-check-failures
+
+
+(define parity-check-failures
+  (lambda (lst)
+    (parity lst 0)
+    ))
+
+(define parity
+  (lambda (lst pos)
+    (cond
+      ((null? lst) null)
+      ((even? (somma(first lst))) (parity (rest lst) (+ 1 pos)))
+      (else (cons pos (parity (rest lst) (+ 1 pos))))
+      )))
+
+(define somma
+  (lambda (str)
+    (cond
+      ((> (string-length str) 1) (+ (string->number (substring str 0 1)) (somma (substring str 1))))
+      ((= (string-length str) 1) (string->number (substring str 0 1)))
+      (else 0)
+
+      )))
+
+;;;FINITO
+
+;Data una lista ordinata di numeri con almeno due elementi, la procedura   closest-pair  restituisce una coppia di numeri
+;la cui differenza è minima.
+;Esempio:  (closest-pair '(0.1 0.3 0.5 0.6 0.8 1.1))  →(0.5 0.6).
+;Formalizza un programma in Scheme per  closest-pair.
+
+(define closest-pair
+  (lambda (x)
+    (cond
+      ((<= (length x) 2) x)
+      ((< (- (second x) (first x)) (- (third x) (second x)))
+              (list (first x) (second x)))
+      (else (closest-pair (cdr x))))))
+;;;FINITO
+
+;Scrivi un programma in Scheme basato sulla procedura  sorted-char-list  che, data una stringa,
+;restituisce la listadei caratteri che vi compaiono, ordinata in ordine alfabetico e senza ripetizioni.
+;Esempi:(sorted-char-list "")→()
+;(sorted-char-list "abc")→(#\a #\b #\c)(sorted-char-list "cba")→(#\a #\b #\c)
+;(sorted-char-list "list of chars that occur in this text")→(#\space #\a #\c #\e #\f #\h #\i #\l #\n #\o #\r #\s #\t #\u #\x)
+
+(define sorted-char-list
+  (lambda (lst)
+    (if (string=? lst "")
+        null
+        (controllore (string-ref lst 0) (sorted-char-list (substring lst 1)))
+                               )))
+(define controllore 
+  (lambda (x lst)
+    (cond
+      ((null? lst) (cons x lst))
+      ;; verfico se il char x è minore del primo char della lista
+      ((char<? x (first lst)) (cons x lst)) 
+      ;; elimino le ripetizioni
+      ((char=? x (first lst)) lst)
+      ;;se x > (car lst) vado a verificare se questo è vero anche per gli altri elementi della lista
+      (else (cons (first lst) (controllore x (rest lst))))
+      )))
+;;;FINITO
