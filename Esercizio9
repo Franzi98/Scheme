@@ -1,0 +1,44 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname Esercizio9) (read-case-sensitive #t) (teachpacks ((lib "hanoi.ss" "installed-teachpacks"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "hanoi.ss" "installed-teachpacks")) #f)))
+(define latin "ABCDEFGHILMNOPQRSTVX") ;;;definisce l'alfabeto da usare
+
+(define traslate  ;;;Trova la lettera corrispondente dei due alabeti
+  (lambda (alphabet)
+    (lambda (key)
+      (string-append (substring alphabet key) (substring alphabet 0 key))
+      )
+    )
+  )
+
+(define get_alphabet (traslate latin)) ;;;raggruppa le due definizioni precedenti
+
+
+(define position ;;;trova la posizione di una lettera in un alfabeto
+  (lambda (char alph)
+    (if (string=? char (substring alph 0 1)) 0
+        (+ 1 (position char (substring alph 1)) )
+        )
+    )
+  )
+
+(define match
+  (lambda (letter alph)
+    (string (string-ref alph (position letter latin)))
+    )
+  )
+
+(define crypt ;;;svolge tutte le operazioni per codificare la frase
+  (lambda (input key)
+    (cond ((string=? input "") "")
+          ((string=? (substring input 0 1) " ") (crypt (substring input 1) key))
+          (else (string-append (match (substring input 0 1) (get_alphabet key)) (crypt (substring input 1) key)))
+          )
+    )
+  )
+;;;Esercizio 2
+
+;(define  mul  (H  (lambda (z) 0)  add))
+;(define  pow  (H  (lambda (u) 1)  mul))
+;(define  add  (H  (lambda (i) i)  s2))
+

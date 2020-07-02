@@ -1,0 +1,46 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname Esercizio1) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+(define articolo
+  (lambda (s)
+    (cond
+      ((string=? s "a") "la")
+      ((string=? s "e") "il")
+      ((string=? s "i") "li")
+      ((string=? s "o") "il")
+      ((string=? s "u") "il")
+  )))
+(define soggetto
+  (lambda (s)
+    (string-append (articolo (substring s (- (string-length s) 1))) (string-append " " s))
+    )
+  )
+(define complemento
+  (lambda (c)
+    (string-append (articolo (substring c(- (string-length c) 1))) (string-append " " c))
+    )
+  )
+(define coniuga
+  (lambda (v)
+    (cond
+      ((string=? v "are")"a")
+      ((string=? v "ere") "e")
+      ((string=? v "ire" ) "e")
+  )
+    ))
+(define verbo
+  (lambda (v)
+    (string-append (substring v 0 (-(string-length v ) 3)) (coniuga (substring v (-(string-length v) 3))))
+    )
+  )
+
+    
+
+
+(define frase
+  (lambda (s v c)
+    (string-append (string-append ( soggetto s) (string-append " " (verbo v)) (string-append " " (complemento c))))
+    )
+  )
+                                                                 
+  

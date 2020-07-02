@@ -1,0 +1,120 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname Esercizio8) (read-case-sensitive #t) (teachpacks ((lib "hanoi.ss" "installed-teachpacks"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "hanoi.ss" "installed-teachpacks")) #f)))
+(define hanoi-moves ; val: lista di coppie
+ (lambda (n) ; n > 0 intero
+   (hanoi-rec n 1 2 3)
+))
+
+
+(define hanoi-rec ; val: lista di coppie
+ (lambda (n s d t) ; n intero, s, d, t: posizioni
+   (if (= n 1)
+     (list (list s d))
+     (let [(m1 (hanoi-rec (- n 1) s t d)) (m2 (hanoi-rec (- n 1) t d s))]
+       (append m1 (cons (list s d) m2))
+      )
+    )
+))
+
+(define hanoi-disks
+  (λ (n k)
+    (calculate-disks n k n 0 0 (hanoi-moves n))
+))
+
+(define calculate-disks 
+  (λ (n k t1 t2 t3 ls)
+    (cond
+      [(= k 0) (list (list 1 t1) (list 2 t2) (list 3 t3))]
+      [(and (= (car (car ls)) 1) (= (car (cdr (car ls))) 2)) (calculate-disks n (- k 1) (- t1 1) (+ t2 1) t3 (cdr ls))]
+      [(and (= (car (car ls)) 1) (= (car (cdr (car ls))) 3)) (calculate-disks n (- k 1) (- t1 1) t2 (+ t3 1) (cdr ls))]
+      [(and (= (car (car ls)) 2) (= (car (cdr (car ls))) 1)) (calculate-disks n (- k 1) (+ t1 1) (- t2 1) t3 (cdr ls))]
+      [(and (= (car (car ls)) 2) (= (car (cdr (car ls))) 3)) (calculate-disks n (- k 1) t1 (- t2 1) (+ t3 1) (cdr ls))]
+      [(and (= (car (car ls)) 3) (= (car (cdr (car ls))) 1)) (calculate-disks n (- k 1) (+ t1 1) t2 (- t3 1) (cdr ls))]
+      ;(and (= (car (car ls)) 3) (= (car (cdr (car ls))) 2))
+      [else (calculate-disks n (- k 1) t1 (+ t2 1) (- t3 1) (cdr ls))]
+    )
+))
+
+;
+;---------------------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------
+;
+
+(define init-disk-list
+ (λ (n)
+   (reverse (cons n (init-disk-list-b n 1 '() )))
+))
+
+(define init-disk-list-b
+ (λ (n c ls)
+   (if (= c n)
+       ls
+       (init-disk-list-b n (+ c 1) (cons c ls))
+   )
+))
+
+(define hanoi-disk-moves
+  (λ (n k)
+    (calculate-disk-moves n k (init-disk-list n) '() '() (hanoi-moves n) )
+))
+
+(define calculate-disk-moves
+  (λ (n k l1 l2 l3 ls)
+    (cond
+      [(= k 0) (list l1 l2 l3)]
+      [(and (= (car (car ls)) 1) (= (car (cdr (car ls))) 2)) (calculate-disk-moves n (- k 1) (cdr l1)             (cons (car l1) l2)    l3                 (cdr ls))]
+      [(and (= (car (car ls)) 1) (= (car (cdr (car ls))) 3)) (calculate-disk-moves n (- k 1) (cdr l1)             l2                    (cons (car l1) l3) (cdr ls))]
+      [(and (= (car (car ls)) 2) (= (car (cdr (car ls))) 1)) (calculate-disk-moves n (- k 1) (cons (car l2) l1)   (cdr l2)              l3                 (cdr ls))]
+      [(and (= (car (car ls)) 2) (= (car (cdr (car ls))) 3)) (calculate-disk-moves n (- k 1) l1                   (cdr l2)              (cons (car l2) l3) (cdr ls))]
+      [(and (= (car (car ls)) 3) (= (car (cdr (car ls))) 1)) (calculate-disk-moves n (- k 1) (cons (car l3) l1)   l2                    (cdr l3)           (cdr ls))]
+      ;(and (= (car (car ls)) 3) (= (car (cdr (car ls))) 2))
+      [else                                                  (calculate-disk-moves n (- k 1) l1                   (cons (car l3) l2)    (cdr l3)           (cdr ls))]
+    )
+))
+
+(define position
+  (λ (x l)
+    (cond
+      [(null? l) -999999]
+      [(= x (car l)) 0]
+      [else (+ 1 (position x (cdr l)))]
+    )
+))
+
+(define hanoi-image
+  (λ (n k)
+    (let [(t123-list (hanoi-disk-moves n k))]
+          (let [(t1-height (length (car t123-list))) (t1-list (car t123-list))
+                (t2-height (length (car (cdr t123-list)))) (t2-list (car (cdr t123-list)))
+                (t3-height (length (car (cdr (cdr t123-list))))) (t3-list (car (cdr (cdr t123-list))))]
+            (cond
+              ; 1 2 3
+              [(and (not (null? t1-list)) (not (null? t2-list)) (not (null? t3-list))) (above (calculate-hanoi-image-tower t3-list t3-height 3) (above (calculate-hanoi-image-tower t2-list t2-height 2)(above (calculate-hanoi-image-tower t1-list t1-height 1) (towers-background n))))]
+              ; 1 2
+              [(and (not (null? t1-list)) (not (null? t2-list))) (above (calculate-hanoi-image-tower t2-list t2-height 2)(above (calculate-hanoi-image-tower t1-list t1-height 1) (towers-background n)))]
+              ; 1   3
+              [(and (not (null? t1-list)) (not (null? t3-list))) (above (calculate-hanoi-image-tower t3-list t3-height 3)(above (calculate-hanoi-image-tower t1-list t1-height 1) (towers-background n)))]
+              ;   2 3
+              [(and (not (null? t2-list)) (not (null? t3-list))) (above (calculate-hanoi-image-tower t3-list t3-height 3)(above (calculate-hanoi-image-tower t2-list t2-height 2) (towers-background n)))]
+              ; 1
+              [(not (null? t1-list)) (above (calculate-hanoi-image-tower t1-list t1-height 1) (towers-background n))]
+              ;   2
+              [(not (null? t2-list)) (above (calculate-hanoi-image-tower t2-list t2-height 2) (towers-background n))]
+              ;     3
+              [(not (null? t3-list)) (above (calculate-hanoi-image-tower t3-list t3-height 3) (towers-background n))]
+              ; TORRI TUTTE VUOTE
+              [else (towers-background n)]
+            )
+          ) 
+    )
+))
+
+(define calculate-hanoi-image-tower
+  (λ (ls oglength t)
+    (if (= (length ls) 1)
+        (disk-image (car ls) oglength t (length ls))
+        (above (disk-image (car ls) oglength t (length ls)) (calculate-hanoi-image-tower (cdr ls) oglength t))
+    )
+))
